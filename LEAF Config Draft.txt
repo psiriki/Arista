@@ -1,0 +1,119 @@
+transceiver qsfp default-mode 4x10G
+!
+ip pim spt-threshold infinity
+ip pim rp-address 13.0.0.100
+!
+hostname oob1-leaf2
+!
+spanning-tree mode mstp
+!
+no aaa root
+!
+username system privilege 15 secret 5 $1$0fNWFW5B$du13iFMBsHqPZ4ihPC8NX.
+!
+vlan 10
+!
+interface Ethernet1
+   no switchport
+   ip address 11.0.0.5/31
+   ip pim sparse-mode
+!
+interface Ethernet2
+   no switchport
+   ip address 11.0.0.7/31
+   ip pim sparse-mode
+!
+interface Ethernet3
+   switchport access vlan 10
+   ip pim sparse-mode
+!
+interface Ethernet4
+   switchport access vlan 10
+   ip pim sparse-mode
+!
+interface Ethernet5
+   switchport access vlan 10
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Ethernet9
+!
+interface Ethernet10
+!
+interface Ethernet11
+!
+interface Ethernet12
+!
+interface Ethernet13
+!
+interface Ethernet14
+!
+interface Ethernet15
+!
+interface Ethernet16
+!
+interface Ethernet17
+!
+interface Ethernet18
+!
+interface Ethernet19
+!
+interface Loopback0
+   ip address 13.0.0.3/32
+!
+interface Management1
+   vrf forwarding MGMT
+   ip address 10.112.252.93/24
+!
+!
+ip routing
+no ip routing vrf MGMT
+!
+management api http-commands
+   no shutdown
+!
+management ssh
+   vrf MGMT
+      no shutdown
+!
+no ip icmp redirect
+!
+ip multicast-routing
+!
+ip prefix-list C2B-PL seq 5 permit 13.0.0.0/8 le 32
+ip prefix-list C2B-PL seq 10 permit 11.0.0.4/31 le 32
+ip prefix-list C2B-PL seq 15 permit 11.0.0.6/31
+ip prefix-list C2B-PL seq 20 permit 30.0.0.0/24
+!
+route-map c2b permit 10
+   match ip address prefix-list C2B-PL
+!
+router bgp 65001
+   router-id 13.0.0.3
+   graceful-restart stalepath-time 10
+   bgp always-compare-med
+   maximum-paths 16 ecmp 128
+   bgp listen range 30.0.0.0/24 peer-group OVS remote-as 65010
+   neighbor OVS peer-group
+   neighbor OVS send-community
+   neighbor OVS out-delay 0
+   neighbor OVS transport connection-mode passive
+   neighbor OVS soft-reconfiguration inbound all
+   neighbor OVS default-originate
+   neighbor OVS maximum-routes 100
+   neighbor SPINE peer-group
+   neighbor SPINE send-community
+   neighbor SPINE out-delay 0
+   neighbor SPINE timers 3 9
+   neighbor SPINE maximum-routes 12000 
+   neighbor 11.0.0.4 peer-group SPINE
+   neighbor 11.0.0.4 remote-as 65100
+   no neighbor 11.0.0.4 out-delay
+   neighbor 11.0.0.6 peer-group SPINE
+   neighbor 11.0.0.6 remote-as 65101
+   redistribute connected route-map c2b
+ 
